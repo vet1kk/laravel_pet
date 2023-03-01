@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\VerificationController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -14,3 +15,8 @@ use Illuminate\Support\Facades\Route;
 |
 */
 Route::apiResource('users', UserController::class);
+
+Route::middleware('auth')->group(function () {
+    Route::get('/email/verify/{id}/{hash}', [VerificationController::class, 'verifyEmail'])->name('verification.verify');
+    Route::get('/email/verify/{user}', [VerificationController::class, 'resendVerificationEmail'])->name('verification.resend')->middleware('throttle:6,1');
+});
