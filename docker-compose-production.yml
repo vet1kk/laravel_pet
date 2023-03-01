@@ -1,0 +1,19 @@
+version: '3.8'
+services:
+    app:
+      image: ${APP_BACKEND}
+      extra_hosts:
+        - "host.docker.internal:host-gateway"
+      restart: unless-stopped
+      ports:
+        - '${APP_PORT:-9000}:80'
+      env_file:
+        - .env
+      environment:
+        CONTAINER_ROLE: app
+        XDEBUG_SESSION: '${XDEBUG_SESSION:-0}'
+        XDEBUG_MODE: '${XDEBUG_MODE:-off}'
+        XDEBUG_CONFIG: '${XDEBUG_CONFIG:-client_host=host.docker.internal}'
+        PHP_IDE_CONFIG: '${PHP_IDE_CONFIG:-serverName=Docker}'
+      volumes:
+        - ./storage:/var/www/storage
