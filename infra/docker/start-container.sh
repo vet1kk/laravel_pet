@@ -40,7 +40,7 @@ if [ "$role" = "app" ]; then
     php artisan storage:link
 
     # Generate Swagger API doc
-    php artisan l5-swagger:generate
+#    php artisan l5-swagger:generate
 
     # Setup supervisor for app container
     cp $SUPERVISOR_DIR/app.conf /etc/supervisor/conf.d/
