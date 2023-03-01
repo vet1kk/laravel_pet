@@ -1,0 +1,84 @@
+version: '3.8'
+services:
+  app:
+    build:
+      args:
+        PHP_VERSION: 8.1
+      context: .
+      dockerfile: Dockerfile
+    image: laravel-app
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    ports:
+      - '${APP_PORT:-85}:80'
+    environment:
+      CONTAINER_ROLE: app
+      XDEBUG_MODE: '${XDEBUG_MODE:-off}'
+      PHP_IDE_CONFIG: serverName=${APP_NAME}
+    volumes:
+      - .:/var/www
+    depends_on:
+      - db
+      - redis
+
+  # Postgres configuration
+  db:
+    image: 'postgres:14'
+    restart: unless-stopped
+    ports:
+      - '${FORWARD_DB_PORT:-5432}:5432'
+    environment:
+      POSTGRES_DB: '${DB_DATABASE}'
+      POSTGRES_USER: '${DB_USERNAME}'
+      POSTGRES_PASSWORD: '${DB_PASSWORD}'
+    volumes:
+      - ${DATA_FOLDER:-./.local_data}/postgresql:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-p${DB_PASSWORD}" ]
+      retries: 3
+      timeout: 5s
+
+  redis:
+    image: 'redis:alpine'
+    restart: unless-stopped
+    ports:
+      - '${FORWARD_REDIS_PORT:-6379}:6379'
+    volumes:
+      -  ${DATA_FOLDER:-./.local_data}/redis:/data
+    networks:
+      - app-network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      retries: 3
+      timeout: 5s
+
+#  mailhog:
+#    image: 'mailhog/mailhog:latest'
+#    restart: unless-stopped
+#    ports:
+#      - '${FORWARD_MAILHOG_PORT:-1025}:1025'
+#      - '${FORWARD_MAILHOG_DASHBOARD_PORT:-8025}:8025'
+#    networks:
+#      - app-network
+
+#  minio:
+#    image: 'minio/minio:latest'
+#    restart: unless-stopped
+#    ports:
+#      - '${FORWARD_MINIO_PORT:-9005}:9000'
+#      - '${FORWARD_MINIO_CONSOLE_PORT:-8900}:8900'
+#    environment:
+#      MINIO_ROOT_USER: '${MINIO_ROOT_USER:-admin}'
+#      MINIO_ROOT_PASSWORD: '${MINIO_ROOT_PASSWORD:-password}'
+#    volumes:
+#      -  ${DATA_FOLDER:-./.local_data}/minio:/data/minio
+#    networks:
+#      - app-network
+#    command: minio server /data/minio --console-address ":8900"
+#    healthcheck:
+#      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+#      retries: 3
+#      timeout: 5s
